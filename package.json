@@ -1,0 +1,25 @@
+{
+  "name": "yt-upload-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "./cli/index.js",
+  "bin": {
+    "yt-upload-playwright": "./cli/index.js",
+    "yt-upload-playwright-login": "./cli/login.js",
+    "yt-upload-playwright-upload": "./cli/upload.js"
+  },
+  "dependencies": {
+    "@playwright/browser-chromium": "^1.58.2",
+    "args": "^5.0.3",
+    "command-line-args": "^6.0.1",
+    "command-line-usage": "^7.0.3",
+    "env-paths": "^4.0.0",
+    "mkdirp": "^3.0.1",
+    "playwright": "^1.58.2",
+    "react": "^19.2.4",
+    "react-curse": "^1.0.23"
+  }
+}
