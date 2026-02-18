@@ -19,6 +19,8 @@
         shellHook = ''
           ls "${pwdp}"
           export PLAYWRIGHT_BROWSERS_PATH=${pwdp}
+          export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+          export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"
         '';
       };
     };
