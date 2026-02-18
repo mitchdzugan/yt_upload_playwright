@@ -95,7 +95,7 @@ const options = commandLineArgs(optionDefinitions);
 
 const sections = [
   {
-    header: 'yt_upload_playwright (*OPTS) (-f|--file)? {underline file}',
+    header: 'yt_upload_playwright (OPTS*) (-f|--file)? {underline file}',
     content: 'upload youtube videos through youtube studio UI via playwright'
   },
   {
