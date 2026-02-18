@@ -8,6 +8,6 @@
 use `npx yt-upload-playwright --help` to see all `OPTS`
 
 
-you can remove the login session saved to your computer via `npx yt-upload-playwright --rm-login` (you will need to use the login commandn again before subsequent uploads ofc)
+you can remove the login session saved to your computer via `npx yt-upload-playwright --rm-login` (you will need to use the login command again before subsequent uploads ofc)
 
 
