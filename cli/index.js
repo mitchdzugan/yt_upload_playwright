@@ -9,9 +9,20 @@ import * as _ from '../lib.js';
 
 const optionDefinitions = [
   {
+    name: 'help',
+    alias: 'h',
+    description: 'print this usage guide',
+    type: Boolean,
+    defaultValue: false,
+  },
+  {
     name: 'login',
     alias: 'l',
-    description: 'open a playwright session to login to your yt account',
+    description: ([
+      'open a playwright session to login to your yt account, the window ',
+      'will close automatically after you login and land on yt studio page (',
+      'does take second though)',
+    ]).join(''),
     type: Boolean,
     defaultValue: false,
   },
@@ -35,6 +46,7 @@ const optionDefinitions = [
     description: 'path to json file(s) with preset options',
     type: String,
     defaultValue: [],
+    typeLabel: '{underline file}[]',
     multiple: true,
   },
   {
@@ -53,6 +65,7 @@ const optionDefinitions = [
     name: 'thumbnail',
     alias: 'i',
     description: 'path to video thumbnail image',
+    typeLabel: '{underline file}',
     type: String,
   },
   {
@@ -73,11 +86,26 @@ const optionDefinitions = [
     name: 'file',
     alias: 'f',
     description: 'path to video that will be uploaded to youtube',
+    typeLabel: '{underline file}',
     defaultOption: true,
     type: String,
   },
 ];
 const options = commandLineArgs(optionDefinitions);
+
+const sections = [
+  {
+    header: 'yt_upload_playwright (*OPTS) (-f|--file)? {underline file}',
+    content: 'upload youtube videos through youtube studio UI via playwright'
+  },
+  {
+    header: 'Options',
+    optionList: optionDefinitions,
+  }
+]
+const usage = commandLineUsage(sections)
+
+
 
 function isLoggedIn(page) {
   return page.evaluate(async function (ytStudioUrl) {
@@ -116,6 +144,10 @@ async function cmdLogin() {
 async function cmdRmLogin() { try { await fs.unlink(_.authPath); } catch { } }
 
 async function cmdUpload(uploadOpts) {
+  if (!uploadOpts.file) {
+    console.log(usage);
+    throw ('required option `--file` not provided');
+  }
   const browser = await _.mkAuthedContext(!uploadOpts.show);
   const page = await browser.newPage();
 
@@ -228,7 +260,8 @@ async function slurpOpts(dst, p) {
 }
 
 async function main() {
-  if (options['rm-login']) { await cmdRmLogin(); }
+  if (options['help']) { console.log(usage); }
+  else if (options['rm-login']) { await cmdRmLogin(); }
   else if (options['login']) { await cmdLogin(); }
   else {
     const opts = { ...options };

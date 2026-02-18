@@ -5,10 +5,7 @@
   "license": "ISC",
   "author": "",
   "type": "module",
-  "main": "./cli/index.js",
-  "bin": {
-    "yt-upload-playwright": "./cli/index.js"
-  },
+  "bin": { "yt-upload-playwright": "./cli/index.js" },
   "dependencies": {
     "command-line-args": "^6.0.1",
     "command-line-usage": "^7.0.3",
