@@ -6,6 +6,7 @@
   "author": "",
   "type": "module",
   "bin": { "yt-upload-playwright": "./cli/index.js" },
+  "scripts": { "build": "" },
   "dependencies": {
     "command-line-args": "^6.0.1",
     "command-line-usage": "^7.0.3",

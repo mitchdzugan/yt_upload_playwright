@@ -1,32 +1,4 @@
 {
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  };
-
-  outputs = { self, nixpkgs }:
-    let
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-      pwdp = "${pkgs.playwright-driver.browsers}";
-    in {
-      devShells.${system}.default = pkgs.mkShell {
-        nativeBuildInputs = [
-          pkgs.playwright
-          pkgs.playwright-driver.browsers
-          pkgs.nodePackages.nodejs
-          pkgs.nodePackages.npm
-        ];
-        shellHook = ''
-          ls "${pwdp}"
-          export PLAYWRIGHT_BROWSERS_PATH=${pwdp}
-          export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-          export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"
-        '';
-      };
-    };
-}
-
-{
   description = "youtube video uploader cli via automated web actions";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -48,22 +20,22 @@
           ["PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS" "true"]
           ["PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS" "ubuntu-24.04"]
         ];
-        ## TODO generate from vars
-        shellHook = ''
-          export PLAYWRIGHT_BROWSERS_PATH=${pwdp}
-          export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-          export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"
-        '';
-        yt-upload-pw = (pkgs.callPackage ./default.nix (
-          { inherit nativeBuildInputs shellHook; }
+        shellHook = builtins.concatStringsSep "\n" (
+          map (kv: builtins.concatStringsSep
+                     " "
+                     ["export" (builtins.concatStringsSep "=" kv)])
+                     vars
+        );
+        yt-upload-playwright = (pkgs.callPackage ./default.nix (
+          { inherit nativeBuildInputs vars; }
         ));
       in {
         packages = {
-          yt-upload-pw = yt-upload-pw;
-          default = yt-upload-pw;
+          yt-upload-playwright = yt-upload-playwright;
+          default = yt-upload-playwright;
         };
         devShells.default = (
-          pkgs.mkShell { inherit nativeBuildInputs vars; }
+          pkgs.mkShell { inherit nativeBuildInputs shellHook; }
         );
       }
     ))
