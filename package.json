@@ -12,7 +12,7 @@
     "command-line-usage": "^7.0.3",
     "env-paths": "^4.0.0",
     "mkdirp": "^3.0.1",
-    "playwright-core": "1.58.0-alpha-1763757971000",
+    "playwright-core": "1.58.0",
     "react": "^19.2.4",
     "react-curse": "^1.0.23"
   }
