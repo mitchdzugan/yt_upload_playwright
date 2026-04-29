@@ -1,92 +1,92 @@
 #!/usr/bin/env node
 
-import commandLineArgs from 'command-line-args'
-import commandLineUsage from 'command-line-usage'
-import { createElement, useEffect } from 'react';
-import ReactCurse, { Text } from 'react-curse';
-import * as fs from 'node:fs/promises';
-import * as _ from '../lib.js';
+import commandLineArgs from "command-line-args";
+import commandLineUsage from "command-line-usage";
+import { createElement, useEffect } from "react";
+import ReactCurse, { Text } from "react-curse";
+import * as fs from "node:fs/promises";
+import * as _ from "../lib.js";
 
 const optionDefinitions = [
   {
-    name: 'help',
-    alias: 'h',
-    description: 'print this usage guide',
+    name: "help",
+    alias: "h",
+    description: "print this usage guide",
     type: Boolean,
     defaultValue: false,
   },
   {
-    name: 'login',
-    alias: 'l',
-    description: ([
-      'open a playwright session to login to your yt account, the window ',
-      'will close automatically after you login and land on yt studio page (',
-      'does take second though)',
-    ]).join(''),
+    name: "login",
+    alias: "l",
+    description: [
+      "open a playwright session to login to your yt account, the window ",
+      "will close automatically after you login and land on yt studio page (",
+      "does take second though)",
+    ].join(""),
     type: Boolean,
     defaultValue: false,
   },
   {
-    name: 'rm-login',
-    alias: 'r',
-    description: 'remove saved playwright login session',
+    name: "rm-login",
+    alias: "r",
+    description: "remove saved playwright login session",
     type: Boolean,
     defaultValue: false,
   },
   {
-    name: 'show',
-    alias: 's',
-    description: 'show browser window instead of default headless',
+    name: "show",
+    alias: "s",
+    description: "show browser window instead of default headless",
     type: Boolean,
     defaultValue: false,
   },
   {
-    name: 'json',
-    alias: 'j',
-    description: 'path to json file(s) with preset options',
+    name: "json",
+    alias: "j",
+    description: "path to json file(s) with preset options",
     type: String,
     defaultValue: [],
-    typeLabel: '{underline file}[]',
+    typeLabel: "{underline file}[]",
     multiple: true,
   },
   {
-    name: 'title',
-    alias: 't',
-    description: 'video title',
+    name: "title",
+    alias: "t",
+    description: "video title",
     type: String,
   },
   {
-    name: 'description',
-    alias: 'd',
-    description: 'video description',
+    name: "description",
+    alias: "d",
+    description: "video description",
     type: String,
   },
   {
-    name: 'thumbnail',
-    alias: 'i',
-    description: 'path to video thumbnail image',
-    typeLabel: '{underline file}',
+    name: "thumbnail",
+    alias: "i",
+    description: "path to video thumbnail image",
+    typeLabel: "{underline file}",
     type: String,
   },
   {
-    name: 'visibility',
-    alias: 'v',
-    description: 'PUBLIC | PRIVATE | UNLISTED',
+    name: "visibility",
+    alias: "v",
+    description: "PUBLIC | PRIVATE | UNLISTED",
     type: String,
   },
   {
-    name: 'playlist',
-    alias: 'p',
-    description: 'youtube ID (from URL) of playlist(s) to add video to',
+    name: "playlist",
+    alias: "p",
+    description: "youtube ID (from URL) of playlist(s) to add video to",
     type: String,
     defaultValue: [],
     multiple: true,
   },
   {
-    name: 'file',
-    alias: 'f',
-    description: 'path to video that will be uploaded to youtube',
-    typeLabel: '{underline file}',
+    name: "file",
+    alias: "f",
+    description: "path to video that will be uploaded to youtube",
+    typeLabel: "{underline file}",
     defaultOption: true,
     type: String,
   },
@@ -95,23 +95,23 @@ const options = commandLineArgs(optionDefinitions);
 
 const sections = [
   {
-    header: 'yt_upload_playwright (OPTS*) (-f|--file)? {underline file}',
-    content: 'upload youtube videos through youtube studio UI via playwright'
+    header: "yt_upload_playwright (OPTS*) (-f|--file)? {underline file}",
+    content: "upload youtube videos through youtube studio UI via playwright",
   },
   {
-    header: 'Options',
+    header: "Options",
     optionList: optionDefinitions,
-  }
-]
-const usage = commandLineUsage(sections)
-
-
+  },
+];
+const usage = commandLineUsage(sections);
 
 function isLoggedIn(page) {
-  return page.evaluate(async function (ytStudioUrl) {
-    await window.fetch(ytStudioUrl);
-    return true;
-  }, _.ytStudioUrl).catch(() => false);
+  return page
+    .evaluate(async function (ytStudioUrl) {
+      await window.fetch(ytStudioUrl);
+      return true;
+    }, _.ytStudioUrl)
+    .catch(() => false);
 }
 
 async function awaitLogin(page) {
@@ -119,16 +119,18 @@ async function awaitLogin(page) {
   while (!(await isLoggedIn(page))) {
     await _.timeout(5000);
     try {
-      const channelTitle = (
-        (await fs.readFile(_.channelTitlePath, 'utf-8')).trim().toLowerCase()
-      );
-      for (const ch of await page.locator('#channel-title').all()) {
+      const channelTitle = (await fs.readFile(_.channelTitlePath, "utf-8"))
+        .trim()
+        .toLowerCase();
+      for (const ch of await page.locator("#channel-title").all()) {
         if (channelTitle === (await ch.innerText()).trim().toLowerCase()) {
           await ch.click();
           break;
         }
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
 
@@ -136,12 +138,17 @@ async function clickLoc(page, ...args) {
   await page.locator(...args).click();
 }
 
-function stepButton(n) { return `ytcp-stepper button[step-index="${n}"]`; }
+function stepButton(n) {
+  return `ytcp-stepper button[step-index="${n}"]`;
+}
 
 async function awaitUploadReady(page) {
   while (true) {
-    try { return await clickLoc(page, stepButton(0)); }
-    catch { await _.timeout(1000); }
+    try {
+      return await clickLoc(page, stepButton(0));
+    } catch {
+      await _.timeout(1000);
+    }
   }
 }
 
@@ -150,21 +157,26 @@ async function cmdLogin() {
   const page = await browser.newPage();
   await page.goto(_.ytStudioUrl);
   await awaitLogin(page);
+  await _.timeout(30000);
   await page.context().storageState({ path: _.authPath });
-  const channelTitle = (await page.locator('#entity-name').innerText()).trim();
+  const channelTitle = (await page.locator("#entity-name").innerText()).trim();
   await fs.writeFile(_.channelTitlePath, channelTitle);
   browser.close();
 }
 
 async function cmdRmLogin() {
-  try { await fs.unlink(_.authPath); } catch { }
-  try { await fs.unlink(_.channelTitlePath); } catch { }
+  try {
+    await fs.unlink(_.authPath);
+  } catch {}
+  try {
+    await fs.unlink(_.channelTitlePath);
+  } catch {}
 }
 
 async function cmdUpload(uploadOpts) {
   if (!uploadOpts.file) {
     console.error(usage);
-    throw ('required option `--file` not provided');
+    throw "required option `--file` not provided";
   }
   const browser = await _.mkAuthedContext(!uploadOpts.show);
   const page = await browser.newPage();
@@ -172,41 +184,55 @@ async function cmdUpload(uploadOpts) {
   function _ftb(tboxName, content) {
     return page.locator(`ytcp-video-${tboxName} #textbox`).fill(content);
   }
-  async function fillTitle(content) { await _ftb('title', content); }
-  async function fillDesc(content) { await _ftb('description', content); }
+  async function fillTitle(content) {
+    await _ftb("title", content);
+  }
+  async function fillDesc(content) {
+    await _ftb("description", content);
+  }
 
   async function getVideoHref() {
     try {
-      const link = page.locator('ytcp-video-info a');
-      return await link.getAttribute('href');
+      const link = page.locator("ytcp-video-info a");
+      return await link.getAttribute("href");
     } catch (e) {
-      console.error(e); return undefined;
+      console.log(e);
+      try {
+        const shLink = page.locator("#share-url");
+        return await shLink.getAttribute("href");
+      } catch (e) {
+        return undefined;
+      }
     }
   }
 
   async function getUploadProgress() {
     try {
-      const txt = await page.locator('ytcp-video-upload-progress').innerText();
-      return parseInt(txt.split('Uploading ')[1].split('%')[0])
+      const txt = await page.locator("ytcp-video-upload-progress").innerText();
+      return parseInt(txt.split("Uploading ")[1].split("%")[0]);
     } catch (e) {
-      console.error(e); return undefined;
+      console.error(e);
+      return undefined;
     }
   }
 
   async function isUploadComplete() {
     try {
-      const el = page.locator('#uploading-tooltip');
-      return (await el.innerText()).trim() === 'Video upload complete';
+      const el = page.locator("#uploading-tooltip");
+      return (await el.innerText()).trim() === "Video upload complete";
+    } catch (e) {
+      console.error(e);
+      return false;
     }
-    catch (e) { console.error(e); return false; }
   }
 
   async function setVisibility(_vis) {
-    const vis = (({
-      PRIVATE: 'PRIVATE',
-      UNLISTED: 'UNLISTED',
-      PUBLIC: 'PUBLIC',
-    })[(_vis || '').toUpperCase()]) || 'PRIVATE';
+    const vis =
+      {
+        PRIVATE: "PRIVATE",
+        UNLISTED: "UNLISTED",
+        PUBLIC: "PUBLIC",
+      }[(_vis || "").toUpperCase()] || "PRIVATE";
     const visEl = `tp-yt-paper-radio-button[NAME="${vis}"] #radioContainer`;
     await clickLoc(page, visEl);
   }
@@ -220,69 +246,78 @@ async function cmdUpload(uploadOpts) {
     .setInputFiles([uploadOpts.file]);
   await awaitUploadReady(page);
   await fillTitle(uploadOpts.title);
-  await fillDesc(uploadOpts.description || '');
+  await fillDesc(uploadOpts.description || "");
   if (uploadOpts.thumbnail) {
     const tnSel = 'ytcp-thumbnail-uploader input[type="file"]';
     await page.locator(tnSel).setInputFiles(uploadOpts.thumbnail);
   }
   await clickLoc(
-    page, 'ytcp-video-metadata-playlists ytcp-dropdown-trigger [role="button"]'
+    page,
+    'ytcp-video-metadata-playlists ytcp-dropdown-trigger [role="button"]',
   );
   for (const pid of uploadOpts.playlist) {
     await clickLoc(page, `ytcp-checkbox-lit[test-id="${pid}"] > div`);
   }
   await clickLoc(page, 'ytcp-playlist-dialog ytcp-button[label="Done"] button');
   await clickLoc(
-    page, 'tp-yt-paper-radio-button[name="VIDEO_MADE_FOR_KIDS_NOT_MFK"]'
+    page,
+    'tp-yt-paper-radio-button[name="VIDEO_MADE_FOR_KIDS_NOT_MFK"]',
   );
   await clickLoc(page, stepButton(3));
   await setVisibility(uploadOpts.visibility);
   let uploadProgress = 0;
   let ytId;
-  while (!(await isUploadComplete())) {
+  let videoHref = await getVideoHref();
+  while (!(await isUploadComplete()) || !videoHref) {
     uploadProgress = (await getUploadProgress()) || uploadProgress;
-    const videoHref = await getVideoHref();
+    videoHref ||= await getVideoHref();
     const isComplete = await isUploadComplete();
-    ytId ||= videoHref && videoHref.split('/')[3];
+    ytId ||= videoHref && videoHref.split("/")[3];
     console.error({ isComplete, uploadProgress, videoHref, ytId });
     await _.timeout(1000);
   }
-  await clickLoc(page, 'ytcp-button#done-button button');
+  await clickLoc(page, "ytcp-button#done-button button");
   try {
     const htxt = (
-      await page.locator('ytcp-prechecks-warning-dialog #dialog .header').innerText()
+      await page
+        .locator("ytcp-prechecks-warning-dialog #dialog .header")
+        .innerText()
     ).trim();
     if (htxt === "We’re still checking your content") {
+      videoHref ||= await getVideoHref();
       await clickLoc(
         page,
-        'ytcp-prechecks-warning-dialog #dialog .footer #secondary-action-button button'
+        "ytcp-prechecks-warning-dialog #dialog .footer #secondary-action-button button",
       );
       await clickLoc(
-        page, 'ytcp-uploads-still-processing-dialog #close-button button'
-      )
+        page,
+        "ytcp-uploads-still-processing-dialog #close-button button",
+      );
+    } else {
+      videoHref ||= await getVideoHref();
     }
-  } catch {}
-
-  try {
-    await clickLoc(
-      page, 'ytcp-uploads-still-processing-dialog #close-button button'
-    )
-  } catch {}
-
-  try {
-    await clickLoc(page, 'ytcp-navigation-drawer ul#main-menu li:first-child');
-  } catch {}
-
+  } catch (e) {
+    console.log(e);
+    try {
+      videoHref ||= await getVideoHref();
+      await clickLoc(page, "#close-button button");
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  await clickLoc(page, "ytcp-navigation-drawer ul#main-menu li:first-child");
   browser.close();
-  console.log("");
-  console.log(ytId);
+  const hrefParts = videoHref.split("/");
+  console.error(hrefParts[hrefParts.length - 1]);
 }
 
 async function slurpOpts(dst, p) {
   try {
-    const txt = await fs.readFile(p, 'utf-8');
+    const txt = await fs.readFile(p, "utf-8");
     const obj = JSON.parse(txt);
-    for (const k in obj) { dst[k] = obj[k]; }
+    for (const k in obj) {
+      dst[k] = obj[k];
+    }
   } catch (e) {
     console.error(e);
     return dst;
@@ -290,15 +325,20 @@ async function slurpOpts(dst, p) {
 }
 
 async function main() {
-  if (options['help']) { console.error(usage); }
-  else if (options['rm-login']) { await cmdRmLogin(); }
-  else if (options['login']) { await cmdLogin(); }
-  else {
+  if (options["help"]) {
+    console.error(usage);
+  } else if (options["rm-login"]) {
+    await cmdRmLogin();
+  } else if (options["login"]) {
+    await cmdLogin();
+  } else {
     const opts = { ...options };
-    delete opts['login'];
-    delete opts['rm-login'];
-    delete opts['json'];
-    for (const jpath of options.json) { await slurpOpts(opts, jpath); }
+    delete opts["login"];
+    delete opts["rm-login"];
+    delete opts["json"];
+    for (const jpath of options.json) {
+      await slurpOpts(opts, jpath);
+    }
     await cmdUpload(opts);
   }
 }
