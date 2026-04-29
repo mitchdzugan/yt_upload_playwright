@@ -12,8 +12,7 @@
         nativeBuildInputs = [
           pkgs.playwright
           pkgs.playwright-driver.browsers
-          pkgs.nodePackages.nodejs
-          pkgs.nodePackages.npm
+          pkgs.nodejs
         ];
         vars = [
           ["PLAYWRIGHT_BROWSERS_PATH" pwdp]
