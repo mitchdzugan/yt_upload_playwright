@@ -116,7 +116,20 @@ function isLoggedIn(page) {
 
 async function awaitLogin(page) {
   await _.timeout(5000);
-  while (!(await isLoggedIn(page))) { await _.timeout(5000); }
+  while (!(await isLoggedIn(page))) {
+    await _.timeout(5000);
+    try {
+      const channelTitle = (
+        (await fs.readFile(_.channelTitlePath, 'utf-8')).trim().toLowerCase()
+      );
+      for (const ch of await page.locator('#channel-title').all()) {
+        if (channelTitle === (await ch.innerText()).trim().toLowerCase()) {
+          await ch.click();
+          break;
+        }
+      }
+    } catch (e) { console.error(e); }
+  }
 }
 
 async function clickLoc(page, ...args) {
@@ -138,14 +151,19 @@ async function cmdLogin() {
   await page.goto(_.ytStudioUrl);
   await awaitLogin(page);
   await page.context().storageState({ path: _.authPath });
+  const channelTitle = (await page.locator('#entity-name').innerText()).trim();
+  await fs.writeFile(_.channelTitlePath, channelTitle);
   browser.close();
 }
 
-async function cmdRmLogin() { try { await fs.unlink(_.authPath); } catch { } }
+async function cmdRmLogin() {
+  try { await fs.unlink(_.authPath); } catch { }
+  try { await fs.unlink(_.channelTitlePath); } catch { }
+}
 
 async function cmdUpload(uploadOpts) {
   if (!uploadOpts.file) {
-    console.log(usage);
+    console.error(usage);
     throw ('required option `--file` not provided');
   }
   const browser = await _.mkAuthedContext(!uploadOpts.show);
@@ -162,7 +180,7 @@ async function cmdUpload(uploadOpts) {
       const link = page.locator('ytcp-video-info a');
       return await link.getAttribute('href');
     } catch (e) {
-      console.log(e); return undefined;
+      console.error(e); return undefined;
     }
   }
 
@@ -171,7 +189,7 @@ async function cmdUpload(uploadOpts) {
       const txt = await page.locator('ytcp-video-upload-progress').innerText();
       return parseInt(txt.split('Uploading ')[1].split('%')[0])
     } catch (e) {
-      console.log(e); return undefined;
+      console.error(e); return undefined;
     }
   }
 
@@ -180,7 +198,7 @@ async function cmdUpload(uploadOpts) {
       const el = page.locator('#uploading-tooltip');
       return (await el.innerText()).trim() === 'Video upload complete';
     }
-    catch (e) { console.log(e); return false; }
+    catch (e) { console.error(e); return false; }
   }
 
   async function setVisibility(_vis) {
@@ -220,11 +238,13 @@ async function cmdUpload(uploadOpts) {
   await clickLoc(page, stepButton(3));
   await setVisibility(uploadOpts.visibility);
   let uploadProgress = 0;
+  let ytId;
   while (!(await isUploadComplete())) {
     uploadProgress = (await getUploadProgress()) || uploadProgress;
     const videoHref = await getVideoHref();
     const isComplete = await isUploadComplete();
-    console.log({ isComplete, uploadProgress, videoHref });
+    ytId ||= videoHref && videoHref.split('/')[3];
+    console.error({ isComplete, uploadProgress, videoHref, ytId });
     await _.timeout(1000);
   }
   await clickLoc(page, 'ytcp-button#done-button button');
@@ -232,7 +252,6 @@ async function cmdUpload(uploadOpts) {
     const htxt = (
       await page.locator('ytcp-prechecks-warning-dialog #dialog .header').innerText()
     ).trim();
-    console.log({ htxt });
     if (htxt === "We’re still checking your content") {
       await clickLoc(
         page,
@@ -242,10 +261,21 @@ async function cmdUpload(uploadOpts) {
         page, 'ytcp-uploads-still-processing-dialog #close-button button'
       )
     }
-  }
-  catch (e) { console.log(e); }
-  await clickLoc(page, 'ytcp-navigation-drawer ul#main-menu li:first-child');
+  } catch {}
+
+  try {
+    await clickLoc(
+      page, 'ytcp-uploads-still-processing-dialog #close-button button'
+    )
+  } catch {}
+
+  try {
+    await clickLoc(page, 'ytcp-navigation-drawer ul#main-menu li:first-child');
+  } catch {}
+
   browser.close();
+  console.log("");
+  console.log(ytId);
 }
 
 async function slurpOpts(dst, p) {
@@ -254,13 +284,13 @@ async function slurpOpts(dst, p) {
     const obj = JSON.parse(txt);
     for (const k in obj) { dst[k] = obj[k]; }
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return dst;
   }
 }
 
 async function main() {
-  if (options['help']) { console.log(usage); }
+  if (options['help']) { console.error(usage); }
   else if (options['rm-login']) { await cmdRmLogin(); }
   else if (options['login']) { await cmdLogin(); }
   else {

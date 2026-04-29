@@ -5,6 +5,7 @@ import path from 'node:path';
 export const ytStudioUrl = 'https://studio.youtube.com';
 const paths = envPaths('yt-upload-playwright', { suffix: '' });
 export const authPath = path.join(paths.config, 'google_auth.json');
+export const channelTitlePath = path.join(paths.config, 'channelTitle');
 
 
 export function mkContext(headless = true, useChromium = false) {
