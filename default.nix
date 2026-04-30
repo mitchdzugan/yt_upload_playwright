@@ -2,7 +2,7 @@
   pname = "yt-upload-playwright";
   version = "1.0.0";
   src = ./.;
-  npmDepsHash = "sha256-h20S4ADq7MBnzynoSAi4CMrgyqroZxWhdkZjECIid14=";
+  npmDepsHash = "sha256-Z3HXv6c2JFntrjeGgZRaDBvh0fsi4QKLbKjzwHfDJyQ=";
   nativeBuildInputs = [ pkgs.makeWrapper ] ++ nativeBuildInputs;
   postInstall = ''
     wrapProgram "$out/bin/yt-upload-playwright" \
