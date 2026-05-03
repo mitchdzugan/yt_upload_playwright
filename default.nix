@@ -4,6 +4,7 @@
   src = ./.;
   npmDepsHash = "sha256-pUypczq5Di1Tue00qC1tgqmXlehvyR89wl0FUXwvGKY=";
   nativeBuildInputs = [ pkgs.makeWrapper ] ++ nativeBuildInputs;
+  propagatedBuildInputs = nativeBuildInputs;
   postInstall = ''
     wrapProgram "$out/bin/yt-upload-playwright" \
       ${builtins.concatStringsSep " " (

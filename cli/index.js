@@ -177,7 +177,7 @@ async function cmdUpload(uploadOpts) {
     console.error(usage);
     throw "required option `--file` not provided";
   }
-  const browser = await _.mkAuthedContext(!uploadOpts.show, true);
+  const browser = await _.mkAuthedContext(!uploadOpts.show);
   const page = await browser.newPage();
 
   function _ftb(tboxName, content) {
