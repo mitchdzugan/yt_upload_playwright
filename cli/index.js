@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
+import cliProgress from "cli-progress";
 import commandLineArgs from "command-line-args";
 import commandLineUsage from "command-line-usage";
-import { createElement, useEffect } from "react";
-import ReactCurse, { Text } from "react-curse";
 import * as fs from "node:fs/promises";
 import * as _ from "../lib.js";
 
@@ -196,7 +195,7 @@ async function cmdUpload(uploadOpts) {
       const link = page.locator("ytcp-video-info a");
       return await link.getAttribute("href");
     } catch (e) {
-      console.log(e);
+      console.error(e);
       try {
         const shLink = page.locator("#share-url");
         return await shLink.getAttribute("href");
@@ -237,6 +236,9 @@ async function cmdUpload(uploadOpts) {
     await clickLoc(page, visEl);
   }
 
+  const { SingleBar, Presets } = cliProgress;
+  const progressBar = new SingleBar({}, Presets.legacy);
+  progressBar.start(100, 0);
   await page.goto(_.ytStudioUrl);
   await awaitLogin(page);
   await clickLoc(page, 'ytcp-button[icon="yt-sys-icons:video_call"] button');
@@ -271,11 +273,11 @@ async function cmdUpload(uploadOpts) {
   while (!(await isUploadComplete()) || !videoHref) {
     uploadProgress = (await getUploadProgress()) || uploadProgress;
     videoHref ||= await getVideoHref();
-    const isComplete = await isUploadComplete();
     ytId ||= videoHref && videoHref.split("/")[3];
-    console.error({ isComplete, uploadProgress, videoHref, ytId });
+    progressBar.update(uploadProgress || 0);
     await _.timeout(1000);
   }
+  progressBar.stop();
   await clickLoc(page, "ytcp-button#done-button button");
   try {
     const htxt = (
@@ -297,18 +299,18 @@ async function cmdUpload(uploadOpts) {
       videoHref ||= await getVideoHref();
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
     try {
       videoHref ||= await getVideoHref();
       await clickLoc(page, "#close-button button");
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
   await clickLoc(page, "ytcp-navigation-drawer ul#main-menu li:first-child");
   browser.close();
   const hrefParts = videoHref.split("/");
-  console.error(hrefParts[hrefParts.length - 1]);
+  console.log(hrefParts[hrefParts.length - 1]);
 }
 
 async function slurpOpts(dst, p) {
