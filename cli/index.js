@@ -113,22 +113,76 @@ function isLoggedIn(page) {
     .catch(() => false);
 }
 
-async function awaitLogin(page) {
+async function getSavedChannelTitle() {
+  try {
+    const channelTitle = (await fs.readFile(_.channelTitlePath, "utf-8"))
+      .trim()
+      .toLowerCase();
+    return channelTitle;
+  } catch (e) {
+    return undefined;
+  }
+}
+
+async function getActiveChannelTitle(page) {
+  let channelTitle;
+  while (!channelTitle) {
+    channelTitle = (await page.locator("#entity-name").innerText()).trim();
+  }
+  return channelTitle.toLowerCase();
+}
+
+async function awaitLogin(page, isInitialLogin = false) {
   await _.timeout(5000);
+  const channelTitle = await getSavedChannelTitle();
   while (!(await isLoggedIn(page))) {
     await _.timeout(5000);
+    if (isInitialLogin) {
+      continue;
+    }
     try {
-      const channelTitle = (await fs.readFile(_.channelTitlePath, "utf-8"))
-        .trim()
-        .toLowerCase();
       for (const ch of await page.locator("#channel-title").all()) {
-        if (channelTitle === (await ch.innerText()).trim().toLowerCase()) {
+        if (
+          !channelTitle ||
+          channelTitle === (await ch.innerText()).trim().toLowerCase()
+        ) {
           await ch.click();
           break;
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      // console.error(e);
+    }
+  }
+  if (channelTitle && !isInitialLogin) {
+    while (true) {
+      const activeTitle = await getActiveChannelTitle(page);
+      console.error({ activeTitle, channelTitle });
+      if (activeTitle === channelTitle) {
+        console.error("Logged in as", activeTitle);
+        break;
+      }
+      try {
+        await page.locator("button#avatar-btn").click();
+        await _.timeout(2000);
+        await page
+          .locator("ytd-multi-page-menu-renderer #right-icon:not([hidden])")
+          .click();
+        await _.timeout(2000);
+        for (const ch of await page
+          .locator("ytd-account-item-renderer #channel-title")
+          .all()) {
+          const chChannelTitle = (await ch.innerText()).trim().toLowerCase();
+          console.error({ chChannelTitle });
+          if (channelTitle === chChannelTitle) {
+            await ch.click();
+            break;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      await _.timeout(2000);
     }
   }
 }
@@ -155,13 +209,10 @@ async function cmdLogin() {
   const browser = await _.mkContext(false, true);
   const page = await browser.newPage();
   await page.goto(_.ytStudioUrl);
-  await awaitLogin(page);
+  await awaitLogin(page, true);
   await _.timeout(30000);
   await page.context().storageState({ path: _.authPath });
-  let channelTitle;
-  while (!channelTitle) {
-    channelTitle = (await page.locator("#entity-name").innerText()).trim();
-  }
+  const channelTitle = await getActiveChannelTitle(page);
   console.error({ channelTitle });
   await fs.writeFile(_.channelTitlePath, channelTitle);
   browser.close();
@@ -198,12 +249,11 @@ async function cmdUpload(uploadOpts) {
     try {
       const link = page.locator("ytcp-video-info a");
       return await link.getAttribute("href");
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
       try {
         const shLink = page.locator("#share-url");
         return await shLink.getAttribute("href");
-      } catch (e) {
+      } catch (_e) {
         return undefined;
       }
     }
@@ -213,8 +263,7 @@ async function cmdUpload(uploadOpts) {
     try {
       const txt = await page.locator("ytcp-video-upload-progress").innerText();
       return parseInt(txt.split("Uploading ")[1].split("%")[0]);
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
       return undefined;
     }
   }
@@ -223,8 +272,7 @@ async function cmdUpload(uploadOpts) {
     try {
       const el = page.locator("#uploading-tooltip");
       return (await el.innerText()).trim() === "Video upload complete";
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
       return false;
     }
   }
@@ -241,10 +289,11 @@ async function cmdUpload(uploadOpts) {
   }
 
   const { SingleBar, Presets } = cliProgress;
+  await page.goto(_.ytStudioUrl);
+  console.error("ensuring login");
+  await awaitLogin(page);
   const progressBar = new SingleBar({}, Presets.legacy);
   progressBar.start(100, 0);
-  await page.goto(_.ytStudioUrl);
-  await awaitLogin(page);
   await clickLoc(page, 'ytcp-button[icon="yt-sys-icons:video_call"] button');
   await clickLoc(page, 'tp-yt-paper-item[test-id="upload"]');
   await page
