@@ -159,7 +159,11 @@ async function cmdLogin() {
   await awaitLogin(page);
   await _.timeout(30000);
   await page.context().storageState({ path: _.authPath });
-  const channelTitle = (await page.locator("#entity-name").innerText()).trim();
+  let channelTitle;
+  while (!channelTitle) {
+    channelTitle = (await page.locator("#entity-name").innerText()).trim();
+  }
+  console.error({ channelTitle });
   await fs.writeFile(_.channelTitlePath, channelTitle);
   browser.close();
 }
