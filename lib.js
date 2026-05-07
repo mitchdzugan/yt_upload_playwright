@@ -1,15 +1,14 @@
-import envPaths from 'env-paths';
-import { firefox, chromium } from 'playwright-core';
-import path from 'node:path';
+import envPaths from "env-paths";
+import { firefox, chromium } from "playwright-core";
+import path from "node:path";
 
-export const ytStudioUrl = 'https://studio.youtube.com';
-const paths = envPaths('yt-upload-playwright', { suffix: '' });
-export const authPath = path.join(paths.config, 'google_auth.json');
-export const channelTitlePath = path.join(paths.config, 'channelTitle');
-
+export const ytStudioUrl = "https://studio.youtube.com";
+const paths = envPaths("yt-upload-playwright", { suffix: "" });
+export const authPath = path.join(paths.config, "google_auth.json");
+export const channelTitlePath = path.join(paths.config, "channelTitle");
 
 export function mkContext(headless = true, useChromium = false) {
-  const args = ['--disable-blink-features=AutomationControlled'];
+  const args = ["--disable-blink-features=AutomationControlled"];
   return (useChromium ? chromium : firefox).launch({
     headless,
     args,
@@ -18,15 +17,16 @@ export function mkContext(headless = true, useChromium = false) {
 }
 
 export async function mkAuthedContext(...args) {
-  console.log('___________ making context _______________')
   const ctx = await mkContext(...args);
-  console.log('MAKING NEW_CONTEXT')
-  return await ctx.newContext(
-    { storageState: authPath, ignoreHTTPSErrors: true }
-  );
+  return await ctx.newContext({
+    storageState: authPath,
+    ignoreHTTPSErrors: true,
+  });
 }
 
-function onProcessDone() { process.exit(); }
+function onProcessDone() {
+  process.exit();
+}
 function onProcessError(error) {
   console.error(error);
   process.exit(1);
@@ -37,5 +37,5 @@ export function processMain(main) {
 }
 
 export function timeout(ms) {
-  return (new Promise((res) => setTimeout(() => res(), ms)));
+  return new Promise((res) => setTimeout(() => res(), ms));
 }

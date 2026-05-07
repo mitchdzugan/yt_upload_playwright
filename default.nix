@@ -2,8 +2,9 @@
   pname = "yt-upload-playwright";
   version = "1.0.0";
   src = ./.;
-  npmDepsHash = "sha256-Z3HXv6c2JFntrjeGgZRaDBvh0fsi4QKLbKjzwHfDJyQ=";
+  npmDepsHash = "sha256-rMSO22zJN80nKPy6LlWh3SUAFyfzpJ393sZ2cwzF1UY=";
   nativeBuildInputs = [ pkgs.makeWrapper ] ++ nativeBuildInputs;
+  propagatedBuildInputs = nativeBuildInputs;
   postInstall = ''
     wrapProgram "$out/bin/yt-upload-playwright" \
       ${builtins.concatStringsSep " " (
