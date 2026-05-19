@@ -49,6 +49,12 @@ const optionDefinitions = [
     multiple: true,
   },
   {
+    name: "channel",
+    alias: "c",
+    description: "channel to use",
+    type: String,
+  },
+  {
     name: "title",
     alias: "t",
     description: "video title",
@@ -134,7 +140,7 @@ async function getActiveChannelTitle(page) {
 
 async function awaitLogin(page, isInitialLogin = false) {
   await _.timeout(5000);
-  const channelTitle = await getSavedChannelTitle();
+  const channelTitle = options.channel || (await getSavedChannelTitle());
   while (!(await isLoggedIn(page))) {
     await _.timeout(5000);
     if (isInitialLogin) {
@@ -142,10 +148,8 @@ async function awaitLogin(page, isInitialLogin = false) {
     }
     try {
       for (const ch of await page.locator("#channel-title").all()) {
-        if (
-          !channelTitle ||
-          channelTitle === (await ch.innerText()).trim().toLowerCase()
-        ) {
+        const chChannelTitle = (await ch.innerText()).trim().toLowerCase();
+        if (!channelTitle || channelTitle === chChannelTitle) {
           await ch.click();
           break;
         }
@@ -153,6 +157,22 @@ async function awaitLogin(page, isInitialLogin = false) {
     } catch (_e) {
       // console.error(e);
     }
+  }
+  if (options.channel === null) {
+    await page.locator("button#avatar-btn").click();
+    await _.timeout(2000);
+    await page
+      .locator("ytd-multi-page-menu-renderer #right-icon:not([hidden])")
+      .click();
+    await _.timeout(2000);
+    console.error("Available Channels:");
+    for (const ch of await page
+      .locator("ytd-account-item-renderer #channel-title")
+      .all()) {
+      const chChannelTitle = (await ch.innerText()).trim().toLowerCase();
+      console.log(" ", chChannelTitle);
+    }
+    process.exit();
   }
   if (channelTitle && !isInitialLogin) {
     while (true) {
@@ -210,7 +230,6 @@ async function cmdLogin() {
   const page = await browser.newPage();
   await page.goto(_.ytStudioUrl);
   await awaitLogin(page, true);
-  await _.timeout(30000);
   await page.context().storageState({ path: _.authPath });
   const channelTitle = await getActiveChannelTitle(page);
   console.error({ channelTitle });
@@ -228,7 +247,7 @@ async function cmdRmLogin() {
 }
 
 async function cmdUpload(uploadOpts) {
-  if (!uploadOpts.file) {
+  if (!uploadOpts.file && uploadOpts.channel !== null) {
     console.error(usage);
     throw "required option `--file` not provided";
   }
