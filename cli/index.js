@@ -319,6 +319,10 @@ async function cmdUpload(uploadOpts) {
     .locator('ytcp-uploads-file-picker input[type="file"]')
     .setInputFiles([uploadOpts.file]);
   await awaitUploadReady(page);
+  await _.timeout(1000);
+  await fillTitle(uploadOpts.title);
+  await fillDesc(uploadOpts.description || "");
+  await _.timeout(1000);
   await fillTitle(uploadOpts.title);
   await fillDesc(uploadOpts.description || "");
   if (uploadOpts.thumbnail) {
