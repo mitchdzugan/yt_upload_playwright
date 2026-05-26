@@ -1,13 +1,29 @@
-### steps to use
-- `git clone https://github.com/mitchdzugan/yt-upload-playwright`
-- `cd yt-upload-playwright`
-- `npm i`
-- `npx yt-upload-playwright --login` 
-  Login to google in the opened browser, wait for it to navigate to the youtube studio page (select which account to use if multiple youtube accounts are tied to the same email) and finally close itself. The session will not be saved for use in the upload command if the window does not close itself
-- `npx yt-upload-playwright (OPTS*) VIDEO_FILE`  
-use `npx yt-upload-playwright --help` to see all `OPTS`
+### Install
+`npm i -g github:mitchdzugan/yt-upload-playwright`
 
+### Usage
+```
+yt_upload_playwright (OPTS*) (-f|--file)? file
 
-you can remove the login session saved to your computer via `npx yt-upload-playwright --rm-login` (you will need to use the login command again before subsequent uploads ofc)
+  upload youtube videos through youtube studio UI via playwright 
 
+Options
+
+  -h, --help                 print this usage guide                             
+  -l, --login                open a playwright session to login to your yt      
+                             account, the window will close automatically after 
+                             you login and land on yt studio page (does take    
+                             second though)                                     
+  -r, --rm-login             remove saved playwright login session              
+  -s, --show                 show browser window instead of default headless    
+  -j, --json file[]          path to json file(s) with preset options           
+  -c, --channel string       channel to use                                     
+  -t, --title string         video title                                        
+  -d, --description string   video description                                  
+  -i, --thumbnail file       path to video thumbnail image                      
+  -v, --visibility string    PUBLIC | PRIVATE | UNLISTED                        
+  -p, --playlist string[]    youtube ID (from URL) of playlist(s) to add video  
+                             to                                                 
+  -f, --file file            path to video that will be uploaded to youtube
+```
 
