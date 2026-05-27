@@ -3,7 +3,7 @@
 
 ### Usage
 ```
-yt_upload_playwright (OPTS*) (-f|--file)? file
+yt-upload-playwright (OPTS*) (-f|--file)? file
 
   upload youtube videos through youtube studio UI via playwright 
 
