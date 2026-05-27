@@ -1,5 +1,5 @@
 ### Install
-`npm i -g github:mitchdzugan/yt-upload-playwright`
+`npm i -g github:mitchdzugan/yt_upload_playwright`
 
 ### Usage
 ```
