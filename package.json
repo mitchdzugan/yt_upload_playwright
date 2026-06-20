@@ -17,6 +17,6 @@
     "command-line-usage": "^7.0.3",
     "env-paths": "^4.0.0",
     "mkdirp": "^3.0.1",
-    "playwright-core": "1.59.1"
+    "playwright-core": "1.60.0"
   }
 }
